@@ -1,0 +1,21 @@
+{
+  "name": "shipreel",
+  "version": "0.1.0",
+  "description": "An agent that turns any GitHub repo into a narrated launch trailer. Footage, voice, score, and critique on the Livepeer network; typography by HyperFrames.",
+  "repository": "https://github.com/Chinteyley/shipreel",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "bin": { "shipreel": "src/cli.ts" },
+  "scripts": {
+    "shipreel": "bun src/cli.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  }
+}

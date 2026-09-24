@@ -1,0 +1,68 @@
+{
+  "lines": {
+    "hook": "Every repo deserves a launch trailer. Nobody has time to make one.",
+    "reveal": "So we built Shipreel. An agent that directs it for you.",
+    "cmd": "One command. Point it at any GitHub repo.",
+    "crew": "Six models. One network. The entire crew runs on Livepeer.",
+    "director": "A director reads your README, and writes the storyboard. No invented claims.",
+    "critic": "A camera shoots every keyframe. A vision critic reviews each take, and sends the bad ones back.",
+    "motion": "The keepers come alive. Then it records the voiceover, and scores the music.",
+    "words": "AI video still can't spell. So every word on screen is real type, set with HyperFrames.",
+    "receipt": "And every run is priced before it spends a cent.",
+    "intro": "This is the trailer it made about itself.",
+    "close": "Shipreel. Every repo deserves a launch trailer."
+  },
+  "vo": {
+    "close": {
+      "file": "assets/v2/vo-close.mp3",
+      "seconds": 5.2
+    },
+    "hook": {
+      "file": "assets/v2/vo-hook.mp3",
+      "seconds": 5.96
+    },
+    "receipt": {
+      "file": "assets/v2/vo-receipt.mp3",
+      "seconds": 5.2
+    },
+    "critic": {
+      "file": "assets/v2/vo-critic.mp3",
+      "seconds": 9.36
+    },
+    "intro": {
+      "file": "assets/v2/vo-intro.mp3",
+      "seconds": 3.72
+    },
+    "words": {
+      "file": "assets/v2/vo-words.mp3",
+      "seconds": 8.92
+    },
+    "reveal": {
+      "file": "assets/v2/vo-reveal.mp3",
+      "seconds": 5.92
+    },
+    "crew": {
+      "file": "assets/v2/vo-crew.mp3",
+      "seconds": 6.6
+    },
+    "motion": {
+      "file": "assets/v2/vo-motion.mp3",
+      "seconds": 6.92
+    },
+    "cmd": {
+      "file": "assets/v2/vo-cmd.mp3",
+      "seconds": 4.56
+    },
+    "director": {
+      "file": "assets/v2/vo-director.mp3",
+      "seconds": 6.48
+    }
+  },
+  "sfx": {
+    "whoosh": "assets/v2/sfx-whoosh.wav",
+    "key": "assets/v2/sfx-key.wav",
+    "tick": "assets/v2/sfx-tick.wav",
+    "bloom": "assets/v2/sfx-bloom.wav"
+  },
+  "bed": "assets/v2/bed.m4a"
+}

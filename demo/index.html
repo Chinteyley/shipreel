@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Shipreel — Livepeer Agent Hackathon</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/Inter.woff2") format("woff2"); font-weight: 300 800; }
+      @font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/JetBrainsMono.woff2") format("woff2"); font-weight: 500; }
+      :root { --ink:#f5f5f7; --soft:#c9c9cf; --line:rgba(255,255,255,.14); --glass:rgba(255,255,255,.06); --o1:#ff9a2e; --o2:#ff4a00; --o3:#ff2d6f; --keep:#30d158; --bad:#ff453a; }
+      body { margin:0; background:#000; color:var(--ink); font-family:"Inter", sans-serif; -webkit-font-smoothing:antialiased; }
+      #root { position:relative; width:100%; height:100%; overflow:hidden; background:#000; perspective:1800px; }
+      .fill { position:absolute; inset:0; }
+      .mono { font-family:"JetBrains Mono", monospace; }
+      .scene, .stage { position:absolute; inset:0; }
+      .stage { transform-origin:50% 50%; }
+      .center { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+      .col { flex-direction:column; text-align:center; }
+      .w, .w2, .w3, .w4, .wa, .wb { display:inline-block; }
+      .display { margin:0; font-size:132px; font-weight:700; letter-spacing:-0.045em; line-height:1.0; }
+      .headline { margin:0; font-size:84px; font-weight:700; letter-spacing:-0.04em; line-height:1.05; text-align:center; }
+      .lede { margin:0; font-size:46px; font-weight:500; letter-spacing:-0.015em; color:var(--soft); }
+      .grad, .grad-t { background:linear-gradient(90deg, var(--o1), var(--o2) 55%, var(--o3)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+      .glass { background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(30px) saturate(160%); box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 40px 120px rgba(0,0,0,.55); }
+      #herow video, .cover, .cover-v { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+      .hero-shade { background:radial-gradient(90% 80% at 50% 50%, rgba(0,0,0,.2), rgba(0,0,0,.85)); }
+      .h-sub { margin-top:44px; }
+      .glow { position:absolute; left:360px; top:40px; width:1200px; height:1000px; border-radius:50%; background:radial-gradient(closest-side, rgba(255,110,20,.28), rgba(255,60,0,.08) 55%, transparent); }
+      .lockup { display:flex; align-items:center; gap:44px; } .lk-mark { position:relative; z-index:2; } .lk-word { position:relative; z-index:1; }
+      .mark-xl { width:190px; height:190px; display:block; filter:drop-shadow(0 20px 60px rgba(255,90,0,.45)); }
+      .wordmark { font-size:200px; font-weight:800; letter-spacing:-0.055em; line-height:1; display:block; }
+      .rv-tag, .cl-tag { margin-top:48px; }
+      .term { width:1180px; border-radius:26px; overflow:hidden; text-align:left; }
+      .term-bar { display:flex; align-items:center; gap:12px; padding:20px 26px; border-bottom:1px solid var(--line); }
+      .term-bar i { width:15px; height:15px; border-radius:50%; background:rgba(255,255,255,.22); }
+      .term-bar i:nth-child(1) { background:#ff5f57; } .term-bar i:nth-child(2) { background:#febc2e; } .term-bar i:nth-child(3) { background:#28c840; }
+      .term-title { margin-left:auto; margin-right:auto; font-size:19px; color:var(--soft); transform:translateX(-40px); }
+      .term-body { padding:40px 48px 46px; }
+      .prompt { font-size:44px; display:flex; align-items:center; gap:18px; }
+      .typed { display:inline-block; white-space:pre; }
+      .caret { display:inline-block; width:4px; height:48px; background:var(--o1); margin-left:-10px; }
+      .log { margin-top:34px; font-size:27px; line-height:1.9; color:var(--ink); }
+      .dim { color:var(--o1); } .ok { color:var(--keep); }
+      .wires { width:100%; height:100%; }
+      .hub { position:absolute; width:260px; height:260px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+        background:radial-gradient(circle at 50% 35%, rgba(255,255,255,.12), rgba(255,255,255,.03)); border:1px solid rgba(255,255,255,.2); box-shadow:0 0 120px rgba(255,120,30,.25), inset 0 1px 0 rgba(255,255,255,.2); }
+      .hub-ring { position:absolute; inset:-2px; border-radius:50%; border:2px solid rgba(255,154,46,.6); }
+      .lp-mark { width:92px; height:auto; }
+      .hub-label { position:absolute; width:400px; margin:0; text-align:center; font-size:34px; font-weight:700; letter-spacing:-0.02em; }
+      .node { position:absolute; width:220px; display:flex; flex-direction:column; align-items:center; }
+      .node-orb { width:150px; height:150px; border-radius:42px; display:flex; align-items:center; justify-content:center; }
+      .node-logo { width:78px; height:78px; object-fit:contain; border-radius:12px; }
+      .node-role { margin:18px 0 0; font-size:32px; font-weight:700; letter-spacing:-0.02em; }
+      .node-model { margin:6px 0 0; font-size:21px; color:var(--soft); }
+      .crew-line { position:absolute; left:0; right:0; bottom:44px; text-align:center; color:var(--ink); font-weight:600; }
+      .scene-head { position:absolute; left:110px; top:78px; display:flex; align-items:center; gap:18px; }
+      .sh-mark { width:40px; height:40px; }
+      .sh-text { font-size:44px; font-weight:700; letter-spacing:-0.03em; }
+      .sh-sub { font-size:20px; color:var(--soft); margin-left:10px; }
+      .readme { position:absolute; left:360px; top:230px; width:1200px; border-radius:24px; overflow:hidden; }
+      .readme-bar { display:flex; align-items:center; gap:14px; padding:20px 28px; border-bottom:1px solid var(--line); font-size:22px; }
+      .gh-sm { width:26px; height:26px; }
+      .readme-body { padding:26px 32px 30px; font-size:22px; line-height:1.75; }
+      .rl { margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .rl:first-child { font-family:"Inter", sans-serif; font-size:40px; font-weight:800; margin-bottom:10px; }
+      .cards-wrap { position:absolute; left:0; right:0; top:230px; perspective:1400px; }
+      .cards { display:grid; gap:20px; padding:0 110px; }
+      .card { border-radius:22px; padding:26px 22px 28px; min-height:560px; transform-origin:50% 100%; }
+      .card-top { display:flex; justify-content:space-between; margin-bottom:26px; }
+      .cn { font-size:20px; color:var(--soft); } .ct { font-size:16px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--o1); }
+      .card h3 { margin:0 0 20px; font-size:38px; line-height:1.04; letter-spacing:-0.03em; font-weight:700; }
+      .cq { margin:0; font-size:24px; line-height:1.38; color:var(--ink); }
+      .world { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:0 0; }
+      .tile { position:absolute; margin:0; }
+      .shot { border-radius:14px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.5); outline:2px solid transparent; }
+      .tile.bad .shot { outline-color:var(--bad); } .tile.keep .shot { outline-color:rgba(48,209,88,.8); }
+      .shot img { width:100%; height:100%; object-fit:cover; display:block; }
+      .tile figcaption { display:flex; justify-content:space-between; align-items:center; margin-top:14px; }
+      .tl { font-size:15px; color:var(--soft); white-space:nowrap; }
+      .stamp { font-size:14px; font-weight:700; padding:5px 11px; border-radius:999px; white-space:nowrap; }
+      .tile.keep .stamp { background:var(--keep); color:#03170a; } .tile.bad .stamp { background:var(--bad); color:#fff; }
+      .why { margin:8px 0 0; font-size:17px; font-weight:500; line-height:1.3; }
+      #mframe, #wvw, #ow { position:absolute; border-radius:26px; overflow:hidden; box-shadow:0 50px 140px rgba(0,0,0,.7); }
+      .chip { position:absolute; left:28px; bottom:28px; display:flex; align-items:center; gap:14px; padding:14px 22px; border-radius:999px; font-size:24px; font-weight:600; background:rgba(0,0,0,.45); }
+      .chip-logo { width:30px; height:30px; object-fit:contain; border-radius:7px; }
+      .chip-m { font-size:19px; color:var(--soft); font-weight:500; }
+      .waves { position:absolute; left:250px; right:250px; bottom:70px; display:flex; flex-direction:column; gap:18px; }
+      .wave { display:flex; align-items:center; gap:28px; height:56px; }
+      .wl { width:170px; display:flex; align-items:center; gap:12px; font-size:24px; font-weight:600; }
+      .wl-logo { width:30px; height:30px; object-fit:contain; border-radius:7px; }
+      .bars { flex:1; display:flex; align-items:center; gap:4px; height:56px; }
+      .bars i { flex:1; border-radius:3px; }
+      .vb { background:var(--ink); } .sb { background:linear-gradient(180deg, var(--o1), var(--o2)); }
+      .w-head { position:absolute; left:0; right:0; top:142px; }
+      .pane, .pane-type { position:absolute; border-radius:24px; overflow:hidden; }
+      .pane { box-shadow:0 50px 140px rgba(0,0,0,.7); }
+      .type-layer { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,.3); }
+      .tl-lock { display:flex; align-items:center; gap:22px; }
+      .tl-mark { width:84px; height:84px; }
+      .tl-title { font-size:108px; font-weight:800; letter-spacing:-0.05em; line-height:1; }
+      .tl-tag { margin:22px 0 0; font-size:28px; font-weight:500; }
+      .wire { position:absolute; left:11%; right:11%; top:27%; bottom:43%; border:1.5px dashed rgba(255,255,255,.75); border-radius:6px; }
+      .wire span { position:absolute; left:-1px; top:-32px; font-size:15px; background:var(--ink); color:#000; padding:4px 9px; border-radius:4px; }
+      .cap-row { position:absolute; left:0; right:0; }
+      .capx { position:absolute; display:flex; align-items:center; gap:16px; }
+      .pill { font-size:18px; font-weight:700; padding:7px 15px; border-radius:999px; }
+      .bad-p { background:var(--bad); color:#fff; } .ok-p { background:var(--keep); color:#03170a; }
+      .cap-t { font-size:22px; font-weight:500; display:flex; align-items:center; gap:12px; }
+      .hf-inline { height:34px; }
+      .stats { position:absolute; left:0; right:0; top:300px; display:flex; justify-content:center; gap:150px; }
+      .stat { text-align:center; }
+      .big { margin:0; font-size:190px; font-weight:800; letter-spacing:-0.06em; line-height:1; font-variant-numeric:tabular-nums; }
+      .st-l { margin:22px 0 0; font-size:34px; font-weight:500; color:var(--soft); }
+      .st-foot { position:absolute; left:0; right:0; top:760px; margin:0; text-align:center; font-size:34px; font-weight:500; color:var(--ink); }
+      #tw { position:absolute; left:0; top:0; width:1920px; height:1080px; overflow:hidden; transform-origin:50% 50%; box-shadow:0 60px 160px rgba(0,0,0,.8); }
+      #tw video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+      #ow { left:0; top:0; width:1920px; height:1080px; transform-origin:50% 50%; }
+      .o-head { position:absolute; left:0; right:0; top:70px; }
+      .o-sub { position:absolute; left:0; right:0; top:178px; margin:0; text-align:center; font-size:26px; color:var(--soft); display:flex; justify-content:center; align-items:center; gap:12px; }
+      .cl-row { display:flex; gap:18px; margin-top:64px; }
+      .cl-chip { display:flex; align-items:center; gap:14px; padding:16px 26px; border-radius:999px; border:1px solid var(--line); background:var(--glass); font-size:24px; font-weight:600; }
+      .cl-logo { width:28px; height:28px; }
+      .cl-hf { height:32px; }
+      .cl-foot { margin:40px 0 0; font-size:20px; letter-spacing:.06em; color:var(--soft); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="140.81">
+      <div id="herow" class="fill"><video id="hero" class="clip" src="assets/v2/hero.mp4" data-start="0" data-duration="8.26" data-playback-rate="0.6" data-track-index="0" muted playsinline></video><div class="fill hero-shade"></div></div>
+      <section id="hook" class="clip scene" data-start="0" data-duration="8.26" data-track-index="2"><div class="stage">
+  <div class="center col">
+    <h1 class="display h-hook"><span class="w">Every</span> <span class="w">repo</span> <span class="w">deserves</span><br><span class="w">a</span> <span class="w">launch</span> <span class="w">trailer.</span></h1>
+    <p class="lede h-sub"><span class="w2">Nobody</span> <span class="w2">has</span> <span class="w2">time</span> <span class="w2">to</span> <span class="w2">make</span> <span class="w2">one.</span></p>
+  </div></div></section>
+      <section id="reveal" class="clip scene" data-start="7.66" data-duration="8.02" data-track-index="2"><div class="stage">
+  <div class="glow" id="rv-glow"></div>
+  <div class="center col">
+    <div class="lockup"><div class="lk-mark"><svg class="mark-xl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="sr-g0" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF9A2E"/>
+      <stop offset="1" stop-color="#FF4A00"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#sr-g0)"/>
+  <g fill="#120803" fill-opacity="0.82">
+    <rect x="17" y="13" width="12" height="9" rx="2.5"/><rect x="41" y="13" width="12" height="9" rx="2.5"/><rect x="65" y="13" width="12" height="9" rx="2.5"/><rect x="89" y="13" width="12" height="9" rx="2.5"/>
+    <rect x="17" y="106" width="12" height="9" rx="2.5"/><rect x="41" y="106" width="12" height="9" rx="2.5"/><rect x="65" y="106" width="12" height="9" rx="2.5"/><rect x="89" y="106" width="12" height="9" rx="2.5"/>
+  </g>
+  <path d="M52 42.5c0-3.1 3.4-5 6-3.4l31.6 20.2c2.5 1.6 2.5 5.2 0 6.8L58 86.3c-2.6 1.6-6-.3-6-3.4z" fill="#fff"/>
+</svg>
+</div><div class="lk-word"><span class="wordmark">Shipreel</span></div></div>
+    <p class="lede rv-tag"><span class="w2">An</span> <span class="w2">agent</span> <span class="w2">that</span> <span class="w2">directs</span> <span class="w2">your</span> <span class="w2">repo’s</span> <span class="w2">launch</span> <span class="w2">trailer.</span></p>
+  </div></div></section>
+      <section id="cmd" class="clip scene" data-start="15.08" data-duration="7.16" data-track-index="2"><div class="stage">
+  <div class="center col">
+    <div class="glass term">
+      <div class="term-bar"><i></i><i></i><i></i><span class="term-title mono">zsh — shipreel</span></div>
+      <div class="term-body">
+        <div class="prompt mono"><span class="grad">$</span> <span class="typed">bun shipreel livepeer/go-livepeer</span><span class="caret"></span></div>
+        <div class="log mono"><div class="ll"><span class="dim">›</span> reading livepeer/go-livepeer</div><div class="ll"><span class="dim">›</span> storyboard · 6 scenes</div><div class="ll"><span class="dim">›</span> estimate · $4.62 before the first render</div><div class="ll"><span class="ok">✓</span> trailer.mp4 · 42.2s · $4.35</div></div>
+      </div>
+    </div>
+  </div></div></section>
+      <section id="crew" class="clip scene" data-start="21.64" data-duration="9.4" data-track-index="2"><div class="stage">
+  <svg class="fill wires" viewBox="0 0 1920 1080" aria-hidden="true">
+    <defs><linearGradient id="wire-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9a2e" stop-opacity=".9"/><stop offset="1" stop-color="#ffffff" stop-opacity=".25"/></linearGradient></defs>
+    <line id="wire0" x1="960" y1="500" x2="960" y2="200" stroke="url(#wire-g)" stroke-width="2" stroke-dasharray="800" stroke-dashoffset="800"/><line id="wire1" x1="960" y1="500" x2="1488" y2="350" stroke="url(#wire-g)" stroke-width="2" stroke-dasharray="800" stroke-dashoffset="800"/><line id="wire2" x1="960" y1="500" x2="1488" y2="650" stroke="url(#wire-g)" stroke-width="2" stroke-dasharray="800" stroke-dashoffset="800"/><line id="wire3" x1="960" y1="500" x2="960" y2="800" stroke="url(#wire-g)" stroke-width="2" stroke-dasharray="800" stroke-dashoffset="800"/><line id="wire4" x1="960" y1="500" x2="432" y2="650" stroke="url(#wire-g)" stroke-width="2" stroke-dasharray="800" stroke-dashoffset="800"/><line id="wire5" x1="960" y1="500" x2="432" y2="350" stroke="url(#wire-g)" stroke-width="2" stroke-dasharray="800" stroke-dashoffset="800"/>
+  </svg>
+  <div class="hub" style="left:830px; top:370px"><div class="hub-ring"></div><svg class="lp-mark" aria-hidden="true" width="332" height="403" viewBox="0 0 332 403" fill="none" xmlns="http://www.w3.org/2000/svg">
+  
+  <path fill="#fff" fill-rule="evenodd" clip-rule="evenodd" d="M0.0168457 0.377075L0.0168488 71.4047H71.0445L71.0445 0.377075H0.0168457ZM130.372 83.0974V154.125H201.4L201.4 83.0974H130.372ZM260.972 236.377V165.349H332V236.377H260.972ZM130.372 248.562V319.59H201.4L201.4 248.562H130.372ZM0.0168488 402.31L0.0168457 331.283H71.0445L71.0445 402.31H0.0168488ZM0.0168457 165.818L0.0168488 236.846H71.0445L71.0445 165.818H0.0168457Z"/>
+</svg>
+</div>
+  <p class="hub-label" style="left:760px; top:650px">Livepeer</p>
+  
+  <div class="node" id="node0" style="left:850px; top:114px">
+    <div class="node-orb glass"><svg class="node-logo" fill="url(#gem1)" aria-hidden="true" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gem1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4c8bf5"/><stop offset=".55" stop-color="#9b72cb"/><stop offset="1" stop-color="#d96570"/></linearGradient></defs><path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/></svg></div>
+    <p class="node-role">Director</p><p class="node-model mono">gemini-text</p>
+  </div>
+  <div class="node" id="node1" style="left:1378px; top:264px">
+    <div class="node-orb glass"><svg class="node-logo" viewBox="28 56 204 148" aria-hidden="true"><path fill="#fff" d="M172.047 119.966H172.045V149.393L148.793 182.239V199.317H94.7969L94.7959 199.318H73.9072L73.9082 199.317H32L130.27 60.9777L172.047 119.966ZM228.407 199.316H195.431V182.303L172.047 149.393V119.965L228.407 199.316ZM65.1064 182.238H86.0381L130.268 119.966H151.156L106.927 182.238H127.917L172.044 119.966H151.158L130.27 90.5373L65.1064 182.238Z"/></svg></div>
+    <p class="node-role">Camera</p><p class="node-model mono">flux-pro</p>
+  </div>
+  <div class="node" id="node2" style="left:1378px; top:564px">
+    <div class="node-orb glass"><svg class="node-logo" fill="#76B900" aria-hidden="true" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.948 8.798v-1.43a6.7 6.7 0 0 1 .424-.018c3.922-.124 6.493 3.374 6.493 3.374s-2.774 3.851-5.75 3.851c-.398 0-.787-.062-1.158-.185v-4.346c1.528.185 1.837.857 2.747 2.385l2.04-1.714s-1.492-1.952-4-1.952a6.016 6.016 0 0 0-.796.035m0-4.735v2.138l.424-.027c5.45-.185 9.01 4.47 9.01 4.47s-4.08 4.964-8.33 4.964c-.37 0-.733-.035-1.095-.097v1.325c.3.035.61.062.91.062 3.957 0 6.82-2.023 9.593-4.408.459.371 2.34 1.263 2.73 1.652-2.633 2.208-8.772 3.984-12.253 3.984-.335 0-.653-.018-.971-.053v1.864H24V4.063zm0 10.326v1.131c-3.657-.654-4.673-4.46-4.673-4.46s1.758-1.944 4.673-2.262v1.237H8.94c-1.528-.186-2.73 1.245-2.73 1.245s.68 2.412 2.739 3.11M2.456 10.9s2.164-3.197 6.5-3.533V6.201C4.153 6.59 0 10.653 0 10.653s2.35 6.802 8.948 7.42v-1.237c-4.84-.6-6.492-5.936-6.492-5.936z"/></svg></div>
+    <p class="node-role">Critic</p><p class="node-model mono">nemotron-omni</p>
+  </div>
+  <div class="node" id="node3" style="left:850px; top:714px">
+    <div class="node-orb glass"><img class="node-logo" src="assets/logos/kling.png" alt="" /></div>
+    <p class="node-role">Motion</p><p class="node-model mono">kling-v3-turbo</p>
+  </div>
+  <div class="node" id="node4" style="left:322px; top:564px">
+    <div class="node-orb glass"><svg class="node-logo" fill="url(#gem2)" aria-hidden="true" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gem2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4c8bf5"/><stop offset=".55" stop-color="#9b72cb"/><stop offset="1" stop-color="#d96570"/></linearGradient></defs><path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/></svg></div>
+    <p class="node-role">Voice</p><p class="node-model mono">gemini-tts</p>
+  </div>
+  <div class="node" id="node5" style="left:322px; top:264px">
+    <div class="node-orb glass"><img class="node-logo" src="assets/logos/sonilo.png" alt="" /></div>
+    <p class="node-role">Score</p><p class="node-model mono">sonilo-t2m</p>
+  </div>
+  <p class="crew-line lede"><span class="w2">Six</span> <span class="w2">models.</span> <span class="w2">One</span> <span class="w2">network.</span></p></div></section>
+      <section id="director" class="clip scene" data-start="30.44" data-duration="8.48" data-track-index="2"><div class="stage">
+  <div class="glass readme" id="readme">
+    <div class="readme-bar"><svg class="gh-sm" fill="#fff" aria-hidden="true" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg><span class="mono">README.md</span></div>
+    <div class="readme-body mono"><p class="rl">Shipreel</p><p class="rl">Every repo deserves a launch trailer. Shipreel is an agent that reads a GitHub repo and dire</p><p class="rl">The whole crew works on the Livepeer network: planner LLM, keyframes, vision critic, image-t</p><p class="rl">bun shipreel livepeer/go-livepeer</p><p class="rl">Why</p><p class="rl">Generative video is great at light, texture, and motion and bad at words. Ask a model for a </p><p class="rl">How it works</p><p class="rl">repo ──► director ──► storyboard.json ──► pre-run estimate ──► budget gate</p><p class="rl">                                                                      │</p></div>
+  </div>
+  <div class="cards-wrap"><div class="cards" style="grid-template-columns:repeat(7, 1fr)">
+  <article class="card glass" id="card0">
+    <div class="card-top"><span class="mono cn">01</span><span class="ct">open</span></div>
+    <h3>Every Repo</h3>
+    <p class="cq">“What if every GitHub repo had a launch trailer?”</p>
+  </article>
+  <article class="card glass" id="card1">
+    <div class="card-top"><span class="mono cn">02</span><span class="ct">title</span></div>
+    <h3>Shipreel</h3>
+    <p class="cq">“Shipreel creates it, from your code to an MP4.”</p>
+  </article>
+  <article class="card glass" id="card2">
+    <div class="card-top"><span class="mono cn">03</span><span class="ct">feature</span></div>
+    <h3>Livepeer Network</h3>
+    <p class="cq">“Footage, voice, and score rendered on the Livepeer network.”</p>
+  </article>
+  <article class="card glass" id="card3">
+    <div class="card-top"><span class="mono cn">04</span><span class="ct">feature</span></div>
+    <h3>HyperFrames</h3>
+    <p class="cq">“HyperFrames composites pixel-exact typography for the final cut.”</p>
+  </article>
+  <article class="card glass" id="card4">
+    <div class="card-top"><span class="mono cn">05</span><span class="ct">code</span></div>
+    <h3>Bun Shipreel</h3>
+    <p class="cq">“Run it with a simple command, no API key needed.”</p>
+  </article>
+  <article class="card glass" id="card5">
+    <div class="card-top"><span class="mono cn">06</span><span class="ct">feature</span></div>
+    <h3>Vision Critic</h3>
+    <p class="cq">“A vision model critiques takes, ensuring quality and accuracy.”</p>
+  </article>
+  <article class="card glass" id="card6">
+    <div class="card-top"><span class="mono cn">07</span><span class="ct">end</span></div>
+    <h3>Shipreel</h3>
+    <p class="cq">“Every repo deserves a launch trailer. Shipreel.”</p>
+  </article></div></div>
+  <div class="scene-head"><span class="sh-logo"><svg class="sh-mark" fill="url(#gem3)" aria-hidden="true" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gem3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4c8bf5"/><stop offset=".55" stop-color="#9b72cb"/><stop offset="1" stop-color="#d96570"/></linearGradient></defs><path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/></svg></span><span class="sh-text">Director</span><span class="sh-sub mono">gemini-text on Livepeer</span></div></div></section>
+      <section id="critic" class="clip scene" data-start="38.32" data-duration="11.36" data-track-index="2"><div class="stage">
+  <div class="world" id="cworld">
+  <figure class="tile keep" id="tile0" style="left:101px; top:388px; width:268px">
+    <div class="shot" style="height:151px"><img src="assets/v2/kf-3c73c013f7e8.jpg" alt="" /></div>
+    <figcaption><span class="mono tl">scene 1 · take 1</span><span class="stamp">Keep</span></figcaption>
+    <p class="why">on brief 1.00</p>
+  </figure>
+  <figure class="tile bad" id="tile1" style="left:391px; top:388px; width:268px">
+    <div class="shot" style="height:151px"><img src="assets/v2/kf-82b40fd1ee3e.jpg" alt="" /></div>
+    <figcaption><span class="mono tl">scene 2 · take 1</span><span class="stamp">Reshoot</span></figcaption>
+    <p class="why">off brief</p>
+  </figure>
+  <figure class="tile keep" id="tile2" style="left:681px; top:388px; width:268px">
+    <div class="shot" style="height:151px"><img src="assets/v2/kf-a35d9d044a0a.jpg" alt="" /></div>
+    <figcaption><span class="mono tl">scene 2 · take 2</span><span class="stamp">Keep</span></figcaption>
+    <p class="why">on brief 1.00</p>
+  </figure>
+  <figure class="tile bad" id="tile3" style="left:971px; top:388px; width:268px">
+    <div class="shot" style="height:151px"><img src="assets/v2/kf-2b8c97005f41.jpg" alt="" /></div>
+    <figcaption><span class="mono tl">scene 3 · take 1</span><span class="stamp">Reshoot</span></figcaption>
+    <p class="why">off brief</p>
+  </figure>
+  <figure class="tile bad" id="tile4" style="left:1261px; top:388px; width:268px">
+    <div class="shot" style="height:151px"><img src="assets/v2/kf-14ce6687eb69.jpg" alt="" /></div>
+    <figcaption><span class="mono tl">scene 3 · take 2</span><span class="stamp">Reshoot</span></figcaption>
+    <p class="why">off brief</p>
+  </figure>
+  <figure class="tile keep" id="tile5" style="left:1551px; top:388px; width:268px">
+    <div class="shot" style="height:151px"><img src="assets/v2/kf-dbe4b60fc241.jpg" alt="" /></div>
+    <figcaption><span class="mono tl">scene 4 · take 1</span><span class="stamp">Keep</span></figcaption>
+    <p class="why">on brief 1.00</p>
+  </figure>
+  <figure class="tile bad" id="tile6" style="left:101px; top:625px; width:268px">
+    <div class="shot" style="height:151px"><img src="assets/v2/kf-674d836c48ec.jpg" alt="" /></div>
+    <figcaption><span class="mono tl">scene 5 · take 1</span><span class="stamp">Reshoot</span></figcaption>
+    <p class="why">visible text on keys</p>
+  </figure>
+  <figure class="tile bad" id="tile7" style="left:391px; top:625px; width:268px">
+    <div class="shot" style="height:151px"><img src="assets/v2/kf-405a2f176e5b.jpg" alt="" /></div>
+    <figcaption><span class="mono tl">scene 5 · take 2</span><span class="stamp">Reshoot</span></figcaption>
+    <p class="why">Visible letters on keys violate brief</p>
+  </figure>
+  <figure class="tile bad" id="tile8" style="left:681px; top:625px; width:268px">
+    <div class="shot" style="height:151px"><img src="assets/v2/kf-03a2bcd6efbb.jpg" alt="" /></div>
+    <figcaption><span class="mono tl">scene 5 · take 3</span><span class="stamp">Reshoot</span></figcaption>
+    <p class="why">keyboard keys have letters</p>
+  </figure>
+  <figure class="tile keep" id="tile9" style="left:971px; top:625px; width:268px">
+    <div class="shot" style="height:151px"><img src="assets/v2/kf-57c075d1c9ce.jpg" alt="" /></div>
+    <figcaption><span class="mono tl">scene 6 · take 1</span><span class="stamp">Keep</span></figcaption>
+    <p class="why">on brief 1.00</p>
+  </figure>
+  <figure class="tile keep" id="tile10" style="left:1261px; top:625px; width:268px">
+    <div class="shot" style="height:151px"><img src="assets/v2/kf-900e913d5237.jpg" alt="" /></div>
+    <figcaption><span class="mono tl">scene 7 · take 1</span><span class="stamp">Keep</span></figcaption>
+    <p class="why">on brief 1.00</p>
+  </figure></div>
+  <div class="scene-head"><svg class="sh-mark" fill="#76B900" aria-hidden="true" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.948 8.798v-1.43a6.7 6.7 0 0 1 .424-.018c3.922-.124 6.493 3.374 6.493 3.374s-2.774 3.851-5.75 3.851c-.398 0-.787-.062-1.158-.185v-4.346c1.528.185 1.837.857 2.747 2.385l2.04-1.714s-1.492-1.952-4-1.952a6.016 6.016 0 0 0-.796.035m0-4.735v2.138l.424-.027c5.45-.185 9.01 4.47 9.01 4.47s-4.08 4.964-8.33 4.964c-.37 0-.733-.035-1.095-.097v1.325c.3.035.61.062.91.062 3.957 0 6.82-2.023 9.593-4.408.459.371 2.34 1.263 2.73 1.652-2.633 2.208-8.772 3.984-12.253 3.984-.335 0-.653-.018-.971-.053v1.864H24V4.063zm0 10.326v1.131c-3.657-.654-4.673-4.46-4.673-4.46s1.758-1.944 4.673-2.262v1.237H8.94c-1.528-.186-2.73 1.245-2.73 1.245s.68 2.412 2.739 3.11M2.456 10.9s2.164-3.197 6.5-3.533V6.201C4.153 6.59 0 10.653 0 10.653s2.35 6.802 8.948 7.42v-1.237c-4.84-.6-6.492-5.936-6.492-5.936z"/></svg><span class="sh-text">Critic</span><span class="sh-sub mono">nemotron-omni-vision on Livepeer</span></div></div></section>
+      <div id="mframe" style="left:320px; top:150px; width:1280px; height:720px">
+    <img class="fill cover" src="assets/v2/kf-a35d9d044a0a.jpg" alt="" />
+    <div id="miris" class="fill"><video id="mvid" class="clip cover-v" src="assets/v2/plate1.mp4" data-start="49.08" data-duration="9.12" data-playback-rate="0.55" data-track-index="1" muted playsinline></video></div>
+    <div class="chip glass" id="chip-still"><svg class="chip-logo" viewBox="28 56 204 148" aria-hidden="true"><path fill="#fff" d="M172.047 119.966H172.045V149.393L148.793 182.239V199.317H94.7969L94.7959 199.318H73.9072L73.9082 199.317H32L130.27 60.9777L172.047 119.966ZM228.407 199.316H195.431V182.303L172.047 149.393V119.965L228.407 199.316ZM65.1064 182.238H86.0381L130.268 119.966H151.156L106.927 182.238H127.917L172.044 119.966H151.158L130.27 90.5373L65.1064 182.238Z"/></svg><span>Keyframe</span><span class="mono chip-m">flux-pro</span></div>
+    <div class="chip glass" id="chip-live"><img class="chip-logo" src="assets/logos/kling.png" alt="" /><span>Motion</span><span class="mono chip-m">kling-v3-turbo</span></div>
+  </div>
+      <section id="motion" class="clip scene" data-start="49.08" data-duration="9.12" data-track-index="2"><div class="stage">
+  <div class="waves">
+    <div class="wave"><span class="wl"><svg class="wl-logo" fill="url(#gem4)" aria-hidden="true" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gem4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4c8bf5"/><stop offset=".55" stop-color="#9b72cb"/><stop offset="1" stop-color="#d96570"/></linearGradient></defs><path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/></svg>Voice</span><div class="bars"><i class="vb" style="height:15px"></i><i class="vb" style="height:50px"></i><i class="vb" style="height:26px"></i><i class="vb" style="height:45px"></i><i class="vb" style="height:33px"></i><i class="vb" style="height:18px"></i><i class="vb" style="height:15px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:17px"></i><i class="vb" style="height:36px"></i><i class="vb" style="height:11px"></i><i class="vb" style="height:7px"></i><i class="vb" style="height:3px"></i><i class="vb" style="height:5px"></i><i class="vb" style="height:56px"></i><i class="vb" style="height:41px"></i><i class="vb" style="height:41px"></i><i class="vb" style="height:9px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:39px"></i><i class="vb" style="height:45px"></i><i class="vb" style="height:30px"></i><i class="vb" style="height:18px"></i><i class="vb" style="height:35px"></i><i class="vb" style="height:39px"></i><i class="vb" style="height:31px"></i><i class="vb" style="height:7px"></i><i class="vb" style="height:3px"></i><i class="vb" style="height:50px"></i><i class="vb" style="height:13px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:8px"></i><i class="vb" style="height:44px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:25px"></i><i class="vb" style="height:31px"></i><i class="vb" style="height:5px"></i><i class="vb" style="height:7px"></i><i class="vb" style="height:51px"></i><i class="vb" style="height:30px"></i><i class="vb" style="height:43px"></i><i class="vb" style="height:22px"></i><i class="vb" style="height:24px"></i><i class="vb" style="height:12px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:45px"></i><i class="vb" style="height:33px"></i><i class="vb" style="height:10px"></i><i class="vb" style="height:3px"></i><i class="vb" style="height:42px"></i><i class="vb" style="height:38px"></i><i class="vb" style="height:20px"></i><i class="vb" style="height:36px"></i><i class="vb" style="height:38px"></i><i class="vb" style="height:32px"></i><i class="vb" style="height:39px"></i><i class="vb" style="height:13px"></i><i class="vb" style="height:3px"></i><i class="vb" style="height:32px"></i><i class="vb" style="height:29px"></i><i class="vb" style="height:15px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:31px"></i><i class="vb" style="height:43px"></i><i class="vb" style="height:26px"></i><i class="vb" style="height:21px"></i><i class="vb" style="height:39px"></i><i class="vb" style="height:31px"></i><i class="vb" style="height:7px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:44px"></i><i class="vb" style="height:39px"></i><i class="vb" style="height:38px"></i><i class="vb" style="height:27px"></i><i class="vb" style="height:38px"></i><i class="vb" style="height:6px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:40px"></i><i class="vb" style="height:43px"></i><i class="vb" style="height:39px"></i><i class="vb" style="height:19px"></i><i class="vb" style="height:21px"></i><i class="vb" style="height:24px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:3px"></i><i class="vb" style="height:27px"></i><i class="vb" style="height:24px"></i><i class="vb" style="height:40px"></i><i class="vb" style="height:25px"></i><i class="vb" style="height:22px"></i><i class="vb" style="height:13px"></i><i class="vb" style="height:7px"></i><i class="vb" style="height:3px"></i><i class="vb" style="height:38px"></i><i class="vb" style="height:32px"></i><i class="vb" style="height:25px"></i><i class="vb" style="height:13px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:22px"></i><i class="vb" style="height:38px"></i><i class="vb" style="height:20px"></i><i class="vb" style="height:24px"></i><i class="vb" style="height:13px"></i><i class="vb" style="height:5px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:4px"></i><i class="vb" style="height:30px"></i><i class="vb" style="height:16px"></i><i class="vb" style="height:4px"></i></div></div>
+    <div class="wave"><span class="wl"><img class="wl-logo" src="assets/logos/sonilo.png" alt="" />Score</span><div class="bars"><i class="sb" style="height:21px"></i><i class="sb" style="height:21px"></i><i class="sb" style="height:21px"></i><i class="sb" style="height:17px"></i><i class="sb" style="height:17px"></i><i class="sb" style="height:17px"></i><i class="sb" style="height:16px"></i><i class="sb" style="height:18px"></i><i class="sb" style="height:17px"></i><i class="sb" style="height:26px"></i><i class="sb" style="height:24px"></i><i class="sb" style="height:23px"></i><i class="sb" style="height:22px"></i><i class="sb" style="height:23px"></i><i class="sb" style="height:21px"></i><i class="sb" style="height:26px"></i><i class="sb" style="height:23px"></i><i class="sb" style="height:16px"></i><i class="sb" style="height:18px"></i><i class="sb" style="height:17px"></i><i class="sb" style="height:19px"></i><i class="sb" style="height:18px"></i><i class="sb" style="height:15px"></i><i class="sb" style="height:13px"></i><i class="sb" style="height:13px"></i><i class="sb" style="height:17px"></i><i class="sb" style="height:35px"></i><i class="sb" style="height:39px"></i><i class="sb" style="height:50px"></i><i class="sb" style="height:45px"></i><i class="sb" style="height:53px"></i><i class="sb" style="height:55px"></i><i class="sb" style="height:50px"></i><i class="sb" style="height:49px"></i><i class="sb" style="height:49px"></i><i class="sb" style="height:54px"></i><i class="sb" style="height:45px"></i><i class="sb" style="height:44px"></i><i class="sb" style="height:53px"></i><i class="sb" style="height:56px"></i><i class="sb" style="height:53px"></i><i class="sb" style="height:51px"></i><i class="sb" style="height:44px"></i><i class="sb" style="height:47px"></i><i class="sb" style="height:53px"></i><i class="sb" style="height:48px"></i><i class="sb" style="height:44px"></i><i class="sb" style="height:52px"></i><i class="sb" style="height:54px"></i><i class="sb" style="height:51px"></i><i class="sb" style="height:52px"></i><i class="sb" style="height:51px"></i><i class="sb" style="height:50px"></i><i class="sb" style="height:48px"></i><i class="sb" style="height:47px"></i><i class="sb" style="height:49px"></i><i class="sb" style="height:45px"></i><i class="sb" style="height:47px"></i><i class="sb" style="height:18px"></i><i class="sb" style="height:26px"></i><i class="sb" style="height:11px"></i><i class="sb" style="height:12px"></i><i class="sb" style="height:40px"></i><i class="sb" style="height:41px"></i><i class="sb" style="height:49px"></i><i class="sb" style="height:49px"></i><i class="sb" style="height:44px"></i><i class="sb" style="height:42px"></i><i class="sb" style="height:41px"></i><i class="sb" style="height:41px"></i><i class="sb" style="height:48px"></i><i class="sb" style="height:42px"></i><i class="sb" style="height:45px"></i><i class="sb" style="height:46px"></i><i class="sb" style="height:43px"></i><i class="sb" style="height:52px"></i><i class="sb" style="height:48px"></i><i class="sb" style="height:45px"></i><i class="sb" style="height:48px"></i><i class="sb" style="height:46px"></i><i class="sb" style="height:48px"></i><i class="sb" style="height:41px"></i><i class="sb" style="height:46px"></i><i class="sb" style="height:48px"></i><i class="sb" style="height:44px"></i><i class="sb" style="height:42px"></i><i class="sb" style="height:45px"></i><i class="sb" style="height:49px"></i><i class="sb" style="height:43px"></i><i class="sb" style="height:40px"></i><i class="sb" style="height:38px"></i><i class="sb" style="height:43px"></i><i class="sb" style="height:31px"></i><i class="sb" style="height:13px"></i><i class="sb" style="height:8px"></i><i class="sb" style="height:6px"></i><i class="sb" style="height:6px"></i><i class="sb" style="height:11px"></i><i class="sb" style="height:8px"></i><i class="sb" style="height:8px"></i><i class="sb" style="height:7px"></i><i class="sb" style="height:6px"></i><i class="sb" style="height:7px"></i><i class="sb" style="height:6px"></i><i class="sb" style="height:5px"></i><i class="sb" style="height:4px"></i><i class="sb" style="height:4px"></i><i class="sb" style="height:4px"></i><i class="sb" style="height:4px"></i><i class="sb" style="height:4px"></i></div></div>
+  </div></div></section>
+      <div id="wvw" style="left:990px; top:300px; width:820px; height:461px"><video id="wv" class="clip cover-v" src="assets/v2/plate1.mp4" data-start="57.6" data-duration="10.92" data-playback-rate="0.46" data-track-index="1" muted playsinline></video><div class="type-layer"><div class="tl-lock"><svg class="tl-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="sr-g5" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF9A2E"/>
+      <stop offset="1" stop-color="#FF4A00"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#sr-g5)"/>
+  <g fill="#120803" fill-opacity="0.82">
+    <rect x="17" y="13" width="12" height="9" rx="2.5"/><rect x="41" y="13" width="12" height="9" rx="2.5"/><rect x="65" y="13" width="12" height="9" rx="2.5"/><rect x="89" y="13" width="12" height="9" rx="2.5"/>
+    <rect x="17" y="106" width="12" height="9" rx="2.5"/><rect x="41" y="106" width="12" height="9" rx="2.5"/><rect x="65" y="106" width="12" height="9" rx="2.5"/><rect x="89" y="106" width="12" height="9" rx="2.5"/>
+  </g>
+  <path d="M52 42.5c0-3.1 3.4-5 6-3.4l31.6 20.2c2.5 1.6 2.5 5.2 0 6.8L58 86.3c-2.6 1.6-6-.3-6-3.4z" fill="#fff"/>
+</svg>
+<span class="tl-title">Shipreel</span></div><p class="tl-tag">GitHub repos into narrated launch trailers.</p><div class="wire"><span class="mono">&lt;h1&gt; Inter 800 · HTML</span></div></div></div>
+      <section id="words" class="clip scene" data-start="57.6" data-duration="10.92" data-track-index="2"><div class="stage">
+  <div class="pane" id="pane-l" style="left:110px; top:300px; width:820px; height:461px"><img class="fill cover" id="soup-img" src="assets/v2/soup.jpg" alt="" /></div>
+  <div class="cap-row" style="top:795px">
+    <div class="capx" style="left:110px"><span class="pill bad-p">Model-drawn text</span><span class="cap-t">Visible letters on keys violate brief</span></div>
+    <div class="capx" style="left:990px"><span class="pill ok-p">Real type</span><span class="cap-t">set by <img class="hf-inline" src="assets/logos/hyperframes.svg" alt="" /></span></div>
+  </div>
+  <h2 class="headline w-head"><span class="wa">AI</span> <span class="wa">video</span> <span class="wa">can’t</span> <span class="wa">spell.</span> <span class="grad-t"><span class="wb">HTML</span> <span class="wb">can.</span></span></h2></div></section>
+      <section id="receipt" class="clip scene" data-start="67.92" data-duration="7.1" data-track-index="2"><div class="stage">
+  <div class="stats">
+    <div class="stat"><p class="big grad-t" id="st-spend">$0.00</p><p class="st-l">spent on the network</p></div>
+    <div class="stat"><p class="big" id="st-calls">0</p><p class="st-l">Livepeer calls</p></div>
+    <div class="stat"><p class="big">5:02</p><p class="st-l">start to finish</p></div>
+  </div>
+  <p class="st-foot"><span class="w2">Estimated</span> <span class="w2">at</span> <span class="w2">$5.38</span> <span class="w2">before</span> <span class="w2">the</span> <span class="w2">first</span> <span class="w2">render.</span></p></div></section>
+      <section id="intro" class="clip scene" data-start="74.42" data-duration="4.72" data-track-index="2"><div class="stage"><div class="center"><p class="headline"><span class="w3">This</span> <span class="w3">is</span> <span class="w3">the</span> <span class="w3">trailer</span> <span class="w3">it</span> <span class="w3">made</span> <span class="w3">about</span> <span class="w3">itself.</span></p></div></div></section>
+      <div id="tw"><video id="trailer" class="clip" src="assets/v2/trailer.mp4" data-start="78.69" data-duration="46.37" data-track-index="1" muted playsinline></video></div>
+      <audio id="trailer-audio" src="assets/v2/trailer.mp4" data-start="78.69" data-duration="46.37" data-track-index="12" data-volume="1"></audio>
+      <div id="ow"><video id="ov" class="clip" src="assets/v2/other.mp4" data-start="126.11" data-duration="6" data-media-start="8.06" data-track-index="1" muted playsinline></video></div>
+      <audio id="ov-audio" src="assets/v2/other.mp4" data-start="126.11" data-duration="6" data-media-start="8.06" data-track-index="12" data-volume="0.9" data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0},{"t":0.5,"v":1},{"t":5.2,"v":1},{"t":6,"v":0}]}]}'></audio>
+      <section id="other" class="clip scene" data-start="126.11" data-duration="6" data-track-index="2"><div class="stage"><p class="headline o-head"><span class="w4">Point</span> <span class="w4">it</span> <span class="w4">at</span> <span class="w4">any</span> <span class="w4">repo.</span></p><p class="o-sub mono"><svg class="gh-sm" fill="#fff" aria-hidden="true" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg> livepeer/go-livepeer</p></div></section>
+      <section id="close" class="clip scene" data-start="131.51" data-duration="9.9" data-track-index="2"><div class="stage">
+  <div class="glow" id="cl-glow"></div>
+  <div class="center col">
+    <div class="lockup"><div class="lk-mark"><svg class="mark-xl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="sr-g6" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF9A2E"/>
+      <stop offset="1" stop-color="#FF4A00"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#sr-g6)"/>
+  <g fill="#120803" fill-opacity="0.82">
+    <rect x="17" y="13" width="12" height="9" rx="2.5"/><rect x="41" y="13" width="12" height="9" rx="2.5"/><rect x="65" y="13" width="12" height="9" rx="2.5"/><rect x="89" y="13" width="12" height="9" rx="2.5"/>
+    <rect x="17" y="106" width="12" height="9" rx="2.5"/><rect x="41" y="106" width="12" height="9" rx="2.5"/><rect x="65" y="106" width="12" height="9" rx="2.5"/><rect x="89" y="106" width="12" height="9" rx="2.5"/>
+  </g>
+  <path d="M52 42.5c0-3.1 3.4-5 6-3.4l31.6 20.2c2.5 1.6 2.5 5.2 0 6.8L58 86.3c-2.6 1.6-6-.3-6-3.4z" fill="#fff"/>
+</svg>
+</div><div class="lk-word"><span class="wordmark">Shipreel</span></div></div>
+    <p class="lede cl-tag"><span class="w2">Every</span> <span class="w2">repo</span> <span class="w2">deserves</span> <span class="w2">a</span> <span class="w2">launch</span> <span class="w2">trailer.</span></p>
+    <div class="cl-row">
+      <span class="cl-chip"><svg class="cl-logo" fill="#fff" aria-hidden="true" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg><span class="mono">github.com/Chinteyley/shipreel</span></span>
+      <span class="cl-chip"><svg class="cl-logo" aria-hidden="true" width="332" height="403" viewBox="0 0 332 403" fill="none" xmlns="http://www.w3.org/2000/svg">
+  
+  <path fill="#fff" fill-rule="evenodd" clip-rule="evenodd" d="M0.0168457 0.377075L0.0168488 71.4047H71.0445L71.0445 0.377075H0.0168457ZM130.372 83.0974V154.125H201.4L201.4 83.0974H130.372ZM260.972 236.377V165.349H332V236.377H260.972ZM130.372 248.562V319.59H201.4L201.4 248.562H130.372ZM0.0168488 402.31L0.0168457 331.283H71.0445L71.0445 402.31H0.0168488ZM0.0168457 165.818L0.0168488 236.846H71.0445L71.0445 165.818H0.0168457Z"/>
+</svg>
+<span>Built on Livepeer</span></span>
+      <span class="cl-chip"><span>Cut with</span><img class="cl-hf" src="assets/logos/hyperframes.svg" alt="" /></span>
+    </div>
+    <p class="cl-foot mono">Livepeer Agent Hackathon · Track 01 · Agent Builder</p>
+  </div></div></section>
+      <audio id="vo-hook" src="assets/v2/vo-hook.mp3" data-start="0.8" data-duration="5.96" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-reveal" src="assets/v2/vo-reveal.mp3" data-start="8.36" data-duration="5.92" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-cmd" src="assets/v2/vo-cmd.mp3" data-start="15.48" data-duration="4.56" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-crew" src="assets/v2/vo-crew.mp3" data-start="22.84" data-duration="6.6" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-director" src="assets/v2/vo-director.mp3" data-start="30.94" data-duration="6.48" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-critic" src="assets/v2/vo-critic.mp3" data-start="38.72" data-duration="9.36" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-motion" src="assets/v2/vo-motion.mp3" data-start="49.58" data-duration="6.92" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-words" src="assets/v2/vo-words.mp3" data-start="58.1" data-duration="8.92" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-receipt" src="assets/v2/vo-receipt.mp3" data-start="68.32" data-duration="5.2" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-intro" src="assets/v2/vo-intro.mp3" data-start="74.62" data-duration="3.72" data-track-index="10" data-volume="1"></audio>
+      <audio id="vo-close" src="assets/v2/vo-close.mp3" data-start="132.41" data-duration="5.2" data-track-index="10" data-volume="1"></audio>
+      <audio id="bed" src="assets/v2/bed.m4a" data-start="0" data-duration="79.19" data-track-index="11" data-volume="1" data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0},{"t":0.5,"v":0.55},{"t":0.8,"v":0.2},{"t":1.2,"v":0.55},{"t":6.76,"v":0.2},{"t":7.26,"v":0.55},{"t":8.06,"v":0.55},{"t":8.36,"v":0.2},{"t":14.28,"v":0.2},{"t":14.78,"v":0.55},{"t":15.18,"v":0.55},{"t":15.48,"v":0.2},{"t":20.04,"v":0.2},{"t":20.54,"v":0.55},{"t":22.54,"v":0.55},{"t":22.84,"v":0.2},{"t":29.44,"v":0.2},{"t":29.94,"v":0.55},{"t":30.64,"v":0.55},{"t":30.94,"v":0.2},{"t":37.42,"v":0.2},{"t":37.92,"v":0.55},{"t":38.42,"v":0.55},{"t":38.72,"v":0.2},{"t":48.08,"v":0.2},{"t":48.58,"v":0.55},{"t":49.28,"v":0.55},{"t":49.58,"v":0.2},{"t":56.5,"v":0.2},{"t":57,"v":0.55},{"t":57.8,"v":0.55},{"t":58.1,"v":0.2},{"t":67.02,"v":0.2},{"t":67.52,"v":0.55},{"t":68.02,"v":0.55},{"t":68.32,"v":0.2},{"t":73.52,"v":0.2},{"t":74.02,"v":0.55},{"t":74.32,"v":0.55},{"t":74.62,"v":0.2},{"t":77.79,"v":0.55},{"t":78.34,"v":0.2},{"t":78.84,"v":0.55},{"t":79.19,"v":0}]}]}'></audio>
+      <audio id="bed-close" src="assets/v2/bed.m4a" data-start="131.11" data-duration="9.7" data-media-start="101.3" data-track-index="11" data-volume="1" data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0},{"t":1,"v":0.55},{"t":1.2,"v":0.55},{"t":1.3,"v":0.2},{"t":6.5,"v":0.2},{"t":7,"v":0.55},{"t":7.1,"v":0.55},{"t":9.7,"v":0}]}]}'></audio>
+      <audio id="fx0" src="assets/v2/sfx-bloom.wav" data-start="7.81" data-duration="3.02" data-track-index="13" data-volume="0.55"></audio>
+      <audio id="fx1" src="assets/v2/sfx-key.wav" data-start="17.13" data-duration="1.02" data-track-index="14" data-volume="0.6"></audio>
+      <audio id="fx2" src="assets/v2/sfx-whoosh.wav" data-start="30.09" data-duration="2.02" data-track-index="13" data-volume="0.4"></audio>
+      <audio id="fx3" src="assets/v2/sfx-whoosh.wav" data-start="41.62" data-duration="2.02" data-track-index="14" data-volume="0.35"></audio>
+      <audio id="fx4" src="assets/v2/sfx-tick.wav" data-start="50.68" data-duration="1.02" data-track-index="13" data-volume="0.4"></audio>
+      <audio id="fx5" src="assets/v2/sfx-whoosh.wav" data-start="79.79" data-duration="2.02" data-track-index="14" data-volume="0.4"></audio>
+      <audio id="fx6" src="assets/v2/sfx-bloom.wav" data-start="131.76" data-duration="3.02" data-track-index="13" data-volume="0.5"></audio>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#herow", {opacity:0, scale:1.12}, {opacity:0.62, scale:1, duration:7.41, ease:"power2.out"}, 0);
+      tl.to("#herow", {opacity:0, duration:0.6, ease:"power2.in"}, 7.31);
+      tl.fromTo("#hook .w", {opacity:0, y:44, filter:"blur(14px)"}, {opacity:1, y:0, filter:"blur(0px)", duration:1.2, stagger:0.09, ease:"power4.out"}, 0.6);
+      tl.fromTo("#hook .w2", {opacity:0, y:20, filter:"blur(14px)"}, {opacity:1, y:0, filter:"blur(0px)", duration:1, stagger:0.05, ease:"power4.out"}, 4.08);
+      tl.to("#hook .h-hook", {opacity:0.55, y:-16, duration:1, ease:"power3.out"}, 4.08);
+      tl.to("#hook > .stage", {opacity:0, scale:1.035, filter:"blur(10px)", duration:0.5, ease:"power2.in"}, 7.36);
+      tl.fromTo("#rv-glow", {opacity:0, scale:0.6}, {opacity:1, scale:1, duration:2.2, ease:"power2.out"}, 7.96);
+      tl.fromTo("#reveal .lk-mark svg", {opacity:0, scale:0.55, rotation:-10, filter:"blur(24px)"}, {opacity:1, scale:1, rotation:0, filter:"blur(0px)", duration:1.5, ease:"expo.out"}, 8.06);
+      tl.fromTo("#reveal .lk-mark", {x:250}, {x:0, duration:1.3, ease:"power4.inOut"}, 8.91);
+      tl.fromTo("#reveal .lk-word", {clipPath:"inset(0 100% 0 0)", x:250}, {clipPath:"inset(0 0% 0 0)", x:0, duration:1.3, ease:"power4.inOut"}, 8.91);
+      tl.fromTo("#reveal .w2", {opacity:0, y:20, filter:"blur(14px)"}, {opacity:1, y:0, filter:"blur(0px)", duration:1, stagger:0.05, ease:"power4.out"}, 9.76);
+      tl.to("#reveal > .stage", {opacity:0, scale:1.035, filter:"blur(10px)", duration:0.5, ease:"power2.in"}, 14.78);
+      tl.fromTo("#cmd .term", {opacity:0, y:60, scale:0.96, filter:"blur(12px)"}, {opacity:1, y:0, scale:1, filter:"blur(0px)", duration:1.2, ease:"power4.out"}, 15.08);
+      tl.fromTo("#cmd .typed", {clipPath:"inset(0 100% 0 0)"}, {clipPath:"inset(0 0% 0 0)", duration:1.3, ease:"steps(30)"}, 15.63);
+      tl.fromTo("#cmd .caret", {opacity:1}, {opacity:0, duration:0.4, repeat:8, yoyo:true, ease:"steps(1)"}, 15.08);
+      tl.fromTo("#cmd .term", {scale:1}, {scale:0.985, duration:0.09, yoyo:true, repeat:1, ease:"power2.out", immediateRender:false}, 17.18);
+      tl.fromTo("#cmd .ll", {opacity:0, y:10}, {opacity:1, y:0, duration:0.5, stagger:0.42, ease:"power3.out"}, 17.38);
+      tl.to("#cmd > .stage", {opacity:0, scale:1.035, filter:"blur(10px)", duration:0.5, ease:"power2.in"}, 21.34);
+      tl.fromTo("#crew .hub", {opacity:0, scale:0.5, filter:"blur(20px)"}, {opacity:1, scale:1, filter:"blur(0px)", duration:1.4, ease:"expo.out"}, 21.74);
+      tl.fromTo("#crew .hub-label", {opacity:0, y:12}, {opacity:1, y:0, duration:0.8, ease:"power3.out"}, 22.24);
+      tl.fromTo("#node0", {opacity:0, x:0, y:300, scale:0.3, filter:"blur(16px)"}, {opacity:1, x:0, y:0, scale:1, filter:"blur(0px)", duration:1.25, ease:"power4.out"}, 22.54);
+      tl.fromTo("#node1", {opacity:0, x:-528, y:150, scale:0.3, filter:"blur(16px)"}, {opacity:1, x:0, y:0, scale:1, filter:"blur(0px)", duration:1.25, ease:"power4.out"}, 22.67);
+      tl.fromTo("#node2", {opacity:0, x:-528, y:-150, scale:0.3, filter:"blur(16px)"}, {opacity:1, x:0, y:0, scale:1, filter:"blur(0px)", duration:1.25, ease:"power4.out"}, 22.8);
+      tl.fromTo("#node3", {opacity:0, x:0, y:-300, scale:0.3, filter:"blur(16px)"}, {opacity:1, x:0, y:0, scale:1, filter:"blur(0px)", duration:1.25, ease:"power4.out"}, 22.93);
+      tl.fromTo("#node4", {opacity:0, x:528, y:-150, scale:0.3, filter:"blur(16px)"}, {opacity:1, x:0, y:0, scale:1, filter:"blur(0px)", duration:1.25, ease:"power4.out"}, 23.06);
+      tl.fromTo("#node5", {opacity:0, x:528, y:150, scale:0.3, filter:"blur(16px)"}, {opacity:1, x:0, y:0, scale:1, filter:"blur(0px)", duration:1.25, ease:"power4.out"}, 23.19);
+      tl.to("#wire0", {attr:{"stroke-dashoffset":0}, duration:1.0, ease:"power2.inOut"}, 22.94);
+      tl.to("#wire1", {attr:{"stroke-dashoffset":0}, duration:1.0, ease:"power2.inOut"}, 23.07);
+      tl.to("#wire2", {attr:{"stroke-dashoffset":0}, duration:1.0, ease:"power2.inOut"}, 23.2);
+      tl.to("#wire3", {attr:{"stroke-dashoffset":0}, duration:1.0, ease:"power2.inOut"}, 23.33);
+      tl.to("#wire4", {attr:{"stroke-dashoffset":0}, duration:1.0, ease:"power2.inOut"}, 23.46);
+      tl.to("#wire5", {attr:{"stroke-dashoffset":0}, duration:1.0, ease:"power2.inOut"}, 23.59);
+      tl.fromTo("#crew .hub-ring", {scale:1, opacity:0.7}, {scale:1.5, opacity:0, duration:1.8, repeat:2, ease:"power2.out"}, 22.84);
+      tl.fromTo("#crew .w2", {opacity:0, y:20, filter:"blur(14px)"}, {opacity:1, y:0, filter:"blur(0px)", duration:1, stagger:0.08, ease:"power4.out"}, 22.94);
+      tl.fromTo("#crew > .stage", {scale:1}, {scale:1.035, duration:8.45, ease:"none"}, 21.64);
+      tl.to("#crew > .stage", {opacity:0, scale:1.6, filter:"blur(14px)", duration:0.8999999999999999, ease:"power3.in"}, 30.14);
+      tl.fromTo("#director .scene-head", {opacity:0, y:14}, {opacity:1, y:0, duration:0.9, ease:"power3.out"}, 30.64);
+      tl.fromTo("#readme", {opacity:0, y:50, scale:0.96, filter:"blur(12px)"}, {opacity:1, y:0, scale:1, filter:"blur(0px)", duration:1.1, ease:"power4.out"}, 30.54);
+      tl.fromTo("#readme .rl", {opacity:0}, {opacity:1, duration:0.3, stagger:0.1}, 30.94);
+      tl.to("#readme", {y:-420, scale:0.72, opacity:0, filter:"blur(8px)", duration:1.1, ease:"power3.inOut"}, 33.04);
+      tl.fromTo("#director .card", {opacity:0, y:120, rotationX:-28, filter:"blur(10px)"}, {opacity:1, y:0, rotationX:0, filter:"blur(0px)", duration:1.2, stagger:0.09, ease:"power4.out"}, 33.39);
+      tl.fromTo("#director .cards", {x:40}, {x:-40, duration:5.88, ease:"none"}, 33.04);
+      tl.to("#director > .stage", {opacity:0, scale:1.035, filter:"blur(10px)", duration:0.5, ease:"power2.in"}, 38.02);
+      tl.fromTo("#cworld", {scale:2.7, x:-457.5, y:-1331.35, opacity:0}, {opacity:1, duration:0.8, ease:"power2.out"}, 38.32);
+      tl.fromTo("#tile7 .stamp, #tile7 .why", {opacity:0, y:6}, {opacity:1, y:0, duration:0.5, stagger:0.15, ease:"power3.out"}, 39.32);
+      tl.to("#tile7 .shot", {opacity:0.45, duration:0.6}, 40.12);
+      tl.to("#cworld", {scale:1, x:0, y:0, duration:2.4, ease:"power3.inOut"}, 41.72);
+      tl.fromTo("#critic .scene-head", {opacity:0, y:14}, {opacity:1, y:0, duration:0.9, ease:"power3.out"}, 42.92);
+      tl.fromTo("#tile0 .stamp, #tile1 .stamp, #tile2 .stamp, #tile3 .stamp, #tile4 .stamp, #tile5 .stamp, #tile6 .stamp, #tile8 .stamp, #tile9 .stamp, #tile10 .stamp", {opacity:0, scale:0.7}, {opacity:1, scale:1, duration:0.45, stagger:0.14, ease:"power3.out"}, 43.12);
+      tl.fromTo("#tile0 .why, #tile1 .why, #tile2 .why, #tile3 .why, #tile4 .why, #tile5 .why, #tile6 .why, #tile8 .why, #tile9 .why, #tile10 .why", {opacity:0}, {opacity:1, duration:0.4, stagger:0.14}, 43.27);
+      tl.to("#tile1 .shot, #tile3 .shot, #tile4 .shot, #tile6 .shot, #tile8 .shot", {opacity:0.45, duration:0.5, stagger:0.14}, 43.42);
+      tl.to("#critic > .stage", {opacity:0, scale:1.035, filter:"blur(10px)", duration:0.5, ease:"power2.in"}, 48.78);
+      tl.fromTo("#mframe", {opacity:0, y:50, scale:0.94, filter:"blur(14px)"}, {opacity:1, y:0, scale:1, filter:"blur(0px)", duration:1.2, ease:"power4.out"}, 49.08);
+      tl.fromTo("#chip-still", {opacity:0, y:10}, {opacity:1, y:0, duration:0.7, ease:"power3.out"}, 49.58);
+      tl.fromTo("#miris", {clipPath:"circle(0% at 50% 50%)"}, {clipPath:"circle(75% at 50% 50%)", duration:1.4, ease:"power3.inOut"}, 50.58);
+      tl.to("#chip-still", {opacity:0, y:-10, duration:0.4}, 50.88);
+      tl.fromTo("#chip-live", {opacity:0, y:10}, {opacity:1, y:0, duration:0.7, ease:"power3.out"}, 51.18);
+      tl.to("#mframe", {y:-70, scale:0.8, duration:1.3, ease:"power3.inOut"}, 52.78);
+      tl.fromTo("#motion .wave", {opacity:0, y:20}, {opacity:1, y:0, duration:0.8, stagger:0.2, ease:"power3.out"}, 53.18);
+      tl.fromTo("#motion .vb", {scaleY:0}, {scaleY:1, duration:0.5, stagger:0.01, ease:"power2.out"}, 53.38);
+      tl.fromTo("#motion .sb", {scaleY:0}, {scaleY:1, duration:0.5, stagger:0.01, ease:"power2.out"}, 53.78);
+      tl.to("#mframe", {opacity:0, scale:0.83, filter:"blur(10px)", duration:0.8, ease:"power2.in"}, 57.4);
+      tl.to("#motion > .stage", {opacity:0, scale:1.035, filter:"blur(10px)", duration:0.5, ease:"power2.in"}, 57.3);
+      tl.fromTo("#words .wa", {opacity:0, y:30, filter:"blur(14px)"}, {opacity:1, y:0, filter:"blur(0px)", duration:1.1, stagger:0.07, ease:"power4.out"}, 57.8);
+      tl.fromTo("#pane-l", {opacity:0, x:-60, rotationY:14, transformPerspective:1800, filter:"blur(12px)"}, {opacity:1, x:0, rotationY:6, filter:"blur(0px)", duration:1.3, ease:"power4.out"}, 58);
+      tl.fromTo("#wvw", {opacity:0, x:60, rotationY:-14, transformPerspective:1800, filter:"blur(12px)"}, {opacity:1, x:0, rotationY:-6, filter:"blur(0px)", duration:1.3, ease:"power4.out"}, 58.2);
+      tl.fromTo("#words .capx", {opacity:0, y:10}, {opacity:1, y:0, duration:0.7, stagger:3.05, ease:"power3.out"}, 58.8);
+      tl.fromTo("#soup-img", {scale:1.1, transformOrigin:"55% 52%"}, {scale:1.85, duration:10.32, ease:"power2.inOut"}, 58);
+      tl.fromTo("#words .wb", {opacity:0, y:24, filter:"blur(14px)"}, {opacity:1, y:0, filter:"blur(0px)", duration:1, stagger:0.08, ease:"power4.out"}, 61.85);
+      tl.fromTo("#wvw .tl-lock", {opacity:0, scale:0.9, filter:"blur(16px)"}, {opacity:1, scale:1, filter:"blur(0px)", duration:1.1, ease:"expo.out"}, 61.85);
+      tl.fromTo("#wvw .tl-tag, #wvw .wire", {opacity:0}, {opacity:1, duration:0.6, stagger:0.35}, 62.35);
+      tl.to("#wvw", {opacity:0, scale:1.035, filter:"blur(10px)", duration:0.8, ease:"power2.in"}, 67.72);
+      tl.to("#words > .stage", {opacity:0, scale:1.035, filter:"blur(10px)", duration:0.5, ease:"power2.in"}, 67.62);
+      tl.fromTo("#receipt .stat", {opacity:0, y:40, filter:"blur(14px)"}, {opacity:1, y:0, filter:"blur(0px)", duration:1.1, stagger:0.15, ease:"power4.out"}, 68.12);
+      (() => { const o = {v:0}; tl.to(o, {v:5.1997, duration:1.6, ease:"power3.out", onUpdate(){ document.getElementById("st-spend").textContent = "$" + o.v.toFixed(2); }}, 68.32); })();
+      (() => { const o = {v:0}; tl.to(o, {v:39, duration:1.6, ease:"power3.out", onUpdate(){ document.getElementById("st-calls").textContent = Math.round(o.v); }}, 68.47); })();
+      tl.fromTo("#receipt .w2", {opacity:0, y:16, filter:"blur(14px)"}, {opacity:1, y:0, filter:"blur(0px)", duration:0.9, stagger:0.05, ease:"power4.out"}, 70.92);
+      tl.to("#receipt > .stage", {opacity:0, scale:1.035, filter:"blur(10px)", duration:0.5, ease:"power2.in"}, 74.12);
+      tl.fromTo("#intro .w3", {opacity:0, y:24, filter:"blur(14px)"}, {opacity:1, y:0, filter:"blur(0px)", duration:1, stagger:0.06, ease:"power4.out"}, 74.57);
+      tl.to("#intro > .stage", {opacity:0, y:-40, filter:"blur(10px)", duration:0.6, ease:"power2.in"}, 78.09);
+      tl.fromTo("#tw", {opacity:0, scale:0.56, rotationX:14, y:80, borderRadius:28}, {opacity:1, scale:0.66, rotationX:0, y:0, duration:1.1, ease:"power4.out"}, 78.69);
+      tl.to("#tw", {scale:1, borderRadius:0, duration:1.3, ease:"power3.inOut"}, 79.89);
+      tl.to("#tw", {scale:0.66, borderRadius:28, duration:1.1, ease:"power3.inOut"}, 123.86);
+      tl.to("#tw", {opacity:0, scale:0.62, filter:"blur(10px)", duration:0.6, ease:"power2.in"}, 124.96);
+      tl.fromTo("#ow", {opacity:0, scale:0.52, y:120, filter:"blur(12px)"}, {opacity:1, scale:0.6, y:70, filter:"blur(0px)", duration:1.2, ease:"power4.out"}, 126.21);
+      tl.fromTo("#other .w4", {opacity:0, y:24, filter:"blur(14px)"}, {opacity:1, y:0, filter:"blur(0px)", duration:1, stagger:0.07, ease:"power4.out"}, 126.41);
+      tl.fromTo("#other .o-sub", {opacity:0}, {opacity:1, duration:0.8}, 127.01);
+      tl.to("#ow", {opacity:0, scale:0.64, filter:"blur(10px)", duration:0.8, ease:"power2.in"}, 131.31);
+      tl.to("#other > .stage", {opacity:0, scale:1.035, filter:"blur(10px)", duration:0.5, ease:"power2.in"}, 131.21);
+      tl.fromTo("#cl-glow", {opacity:0, scale:0.6}, {opacity:1, scale:1, duration:2.4, ease:"power2.out"}, 131.71);
+      tl.fromTo("#close .lk-mark svg", {opacity:0, scale:0.55, filter:"blur(24px)"}, {opacity:1, scale:1, filter:"blur(0px)", duration:1.4, ease:"expo.out"}, 131.81);
+      tl.fromTo("#close .lk-mark", {x:250}, {x:0, duration:1.2, ease:"power4.inOut"}, 132.41);
+      tl.fromTo("#close .lk-word", {clipPath:"inset(0 100% 0 0)", x:250}, {clipPath:"inset(0 0% 0 0)", x:0, duration:1.2, ease:"power4.inOut"}, 132.41);
+      tl.fromTo("#close .w2", {opacity:0, y:20, filter:"blur(14px)"}, {opacity:1, y:0, filter:"blur(0px)", duration:1, stagger:0.06, ease:"power4.out"}, 132.91);
+      tl.fromTo("#close .cl-chip", {opacity:0, y:18, filter:"blur(8px)"}, {opacity:1, y:0, filter:"blur(0px)", duration:0.9, stagger:0.16, ease:"power4.out"}, 133.71);
+      tl.fromTo("#close .cl-foot", {opacity:0}, {opacity:1, duration:0.8}, 134.41);
+      tl.to("#close > .stage", {opacity:0, duration:0.9, ease:"power2.in"}, 139.91);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

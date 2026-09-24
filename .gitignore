@@ -1,0 +1,16 @@
+node_modules/
+out/
+out-*/
+.scratch/
+.env
+*.log
+.DS_Store
+demo/assets/
+demo/renders/
+demo/.voice-concat.wav
+.hyperframes/
+# local agent skill installs, not part of the product
+.agents/
+.hermes/
+.claude/skills/
+skills-lock.json
