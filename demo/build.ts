@@ -228,27 +228,39 @@ push(
 );
 
 // ---------- 4 · crew constellation ----------
-const CX = 960, CY = 500, RX = 610, RY = 300;
+const CX = 960, CY = 525, RX = 610, RY = 290;
 const nodes = crew.map((c, i) => {
   const a = (-90 + i * 60) * (Math.PI / 180);
   return { ...c, x: Math.round(CX + RX * Math.cos(a)), y: Math.round(CY + RY * Math.sin(a)) };
 });
+// Spokes run hub edge → tile edge. Gradients use user-space coordinates: an objectBoundingBox
+// gradient on a perfectly vertical line has a zero-width box and renders nothing.
+const HUB_R = 130, TILE_HALF = 75, WIRE_GAP = 12;
+const wires = nodes.map((n) => {
+  const ox = n.x, oy = n.y - 11; // tile centre: the node box starts 86px above n.y, tile is 150px
+  const dx = ox - CX, dy = oy - CY, d = Math.hypot(dx, dy), ux = dx / d, uy = dy / d;
+  const toTileEdge = TILE_HALF / Math.max(Math.abs(ux), Math.abs(uy));
+  const a = HUB_R + WIRE_GAP, b = d - toTileEdge - WIRE_GAP;
+  return { x1: r2(CX + ux * a), y1: r2(CY + uy * a), x2: r2(CX + ux * b), y2: r2(CY + uy * b), len: Math.ceil(b - a) };
+});
 const crewEl = scene("crew", S.crew, `
   <svg class="fill wires" viewBox="0 0 1920 1080" aria-hidden="true">
-    <defs><linearGradient id="wire-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9a2e" stop-opacity=".9"/><stop offset="1" stop-color="#ffffff" stop-opacity=".25"/></linearGradient></defs>
-    ${nodes.map((n, i) => `<line id="wire${i}" x1="${CX}" y1="${CY}" x2="${n.x}" y2="${n.y}" stroke="url(#wire-g)" stroke-width="2" stroke-dasharray="800" stroke-dashoffset="800"/>`).join("")}
+    <defs>${wires.map((w, i) => `<linearGradient id="wire-g${i}" gradientUnits="userSpaceOnUse" x1="${w.x1}" y1="${w.y1}" x2="${w.x2}" y2="${w.y2}"><stop offset="0" stop-color="#ff9a2e" stop-opacity=".95"/><stop offset="1" stop-color="#ffffff" stop-opacity=".3"/></linearGradient>`).join("")}</defs>
+    ${wires.map((w, i) => `<line id="wire${i}" x1="${w.x1}" y1="${w.y1}" x2="${w.x2}" y2="${w.y2}" stroke="url(#wire-g${i})" stroke-width="2" stroke-linecap="round" stroke-dasharray="${w.len}" stroke-dashoffset="${w.len}"/>`).join("")}
   </svg>
-  <div class="hub" style="left:${CX - 130}px; top:${CY - 130}px"><div class="hub-ring"></div>${LIVEPEER("lp-mark")}</div>
-  <p class="hub-label" style="left:${CX - 200}px; top:${CY + 150}px">Livepeer</p>
-  ${nodes.map((n, i) => `
-  <div class="node" id="node${i}" style="left:${n.x - 110}px; top:${n.y - 86}px">
-    <div class="node-orb glass">${n.logo("node-logo")}</div>
-    <p class="node-role">${n.role}</p><p class="node-model mono">${esc(short(n.model))}</p>
-  </div>`).join("")}
+  <div class="hub" style="left:${CX - 130}px; top:${CY - 130}px"><div class="hub-ring"></div>${LIVEPEER("lp-mark")}<span class="hub-name">Livepeer</span></div>
+  ${nodes.map((n, i) => {
+    const orb = `<div class="node-orb glass">${n.logo("node-logo")}</div>`;
+    const labels = `<p class="node-role">${n.role}</p><p class="node-model mono">${esc(short(n.model))}</p>`;
+    // The top node stacks its labels above the tile (90px of labels), so its spoke meets the tile directly.
+    return i === 0
+      ? `<div class="node node-top" id="node${i}" style="left:${n.x - 110}px; top:${n.y - 176}px">${labels}${orb}</div>`
+      : `<div class="node" id="node${i}" style="left:${n.x - 110}px; top:${n.y - 86}px">${orb}${labels}</div>`;
+  }).join("")}
   <p class="crew-line lede">${words("Six models. One network.", "w2")}</p>`);
 push(
   `tl.fromTo("#crew .hub", {opacity:0, scale:0.5, filter:"blur(20px)"}, {opacity:1, scale:1, filter:"blur(0px)", duration:1.4, ease:"expo.out"}, ${at(S.crew, 0.1)});`,
-  `tl.fromTo("#crew .hub-label", {opacity:0, y:12}, {opacity:1, y:0, duration:0.8, ease:"power3.out"}, ${at(S.crew, 0.6)});`,
+  `tl.fromTo("#crew .hub-name", {opacity:0, y:12}, {opacity:1, y:0, duration:0.8, ease:"power3.out"}, ${at(S.crew, 0.6)});`,
   ...nodes.map((n, i) => `tl.fromTo("#node${i}", {opacity:0, x:${CX - n.x}, y:${CY - n.y}, scale:0.3, filter:"blur(16px)"}, {opacity:1, x:0, y:0, scale:1, filter:"blur(0px)", duration:1.25, ease:"power4.out"}, ${at(S.crew, 0.9 + i * 0.13)});`),
   ...nodes.map((_, i) => `tl.to("#wire${i}", {attr:{"stroke-dashoffset":0}, duration:1.0, ease:"power2.inOut"}, ${at(S.crew, 1.3 + i * 0.13)});`),
   `tl.fromTo("#crew .hub-ring", {scale:1, opacity:0.7}, {scale:1.5, opacity:0, duration:1.8, repeat:2, ease:"power2.out"}, ${at(S.crew, 1.2)});`,
@@ -537,14 +549,16 @@ const html = `<!doctype html>
       .hub { position:absolute; width:260px; height:260px; border-radius:50%; display:flex; align-items:center; justify-content:center;
         background:radial-gradient(circle at 50% 35%, rgba(255,255,255,.12), rgba(255,255,255,.03)); border:1px solid rgba(255,255,255,.2); box-shadow:0 0 120px rgba(255,120,30,.25), inset 0 1px 0 rgba(255,255,255,.2); }
       .hub-ring { position:absolute; inset:-2px; border-radius:50%; border:2px solid rgba(255,154,46,.6); }
-      .lp-mark { width:92px; height:auto; }
-      .hub-label { position:absolute; width:400px; margin:0; text-align:center; font-size:34px; font-weight:700; letter-spacing:-0.02em; }
+      .hub { flex-direction:column; }
+      .lp-mark { width:74px; height:auto; }
+      .hub-name { margin-top:16px; font-size:30px; font-weight:700; letter-spacing:-0.02em; }
       .node { position:absolute; width:220px; display:flex; flex-direction:column; align-items:center; }
       .node-orb { width:150px; height:150px; border-radius:42px; display:flex; align-items:center; justify-content:center; }
       .node-logo { width:78px; height:78px; object-fit:contain; border-radius:12px; }
-      .node-role { margin:18px 0 0; font-size:32px; font-weight:700; letter-spacing:-0.02em; }
-      .node-model { margin:6px 0 0; font-size:21px; color:var(--soft); }
-      .crew-line { position:absolute; left:0; right:0; bottom:44px; text-align:center; color:var(--ink); font-weight:600; }
+      .node-role { margin:18px 0 0; line-height:40px; font-size:32px; font-weight:700; letter-spacing:-0.02em; }
+      .node-model { margin:6px 0 0; line-height:26px; font-size:21px; color:var(--soft); }
+      .node-top .node-role { margin:0; } .node-top .node-orb { margin-top:18px; }
+      .crew-line { position:absolute; left:0; right:0; bottom:28px; text-align:center; color:var(--ink); font-weight:600; }
       .scene-head { position:absolute; left:110px; top:78px; display:flex; align-items:center; gap:18px; }
       .sh-mark { width:40px; height:40px; }
       .sh-text { font-size:44px; font-weight:700; letter-spacing:-0.03em; }

@@ -8,7 +8,7 @@ The whole crew works on the **Livepeer network**: planner LLM, keyframes, vision
 bun shipreel livepeer/go-livepeer
 ```
 
-**▶ [Demo video](https://7y4flzpulgv4co6r.public.blob.vercel-storage.com/uploads/1790266481197-9i7upk-shipreel-demo-v2.mp4)** (2:21) · Sample trailers, unedited Shipreel output: [Shipreel, by Shipreel](https://github.com/Chinteyley/shipreel/releases/download/v0.1.0/trailer-shipreel.mp4) · [livepeer/go-livepeer](https://github.com/Chinteyley/shipreel/releases/download/v0.1.0/trailer-go-livepeer.mp4)
+**▶ [Demo video](https://7y4flzpulgv4co6r.public.blob.vercel-storage.com/uploads/1790267906438-1y3snc-shipreel-demo-v3.mp4)** (2:21) · Sample trailers, unedited Shipreel output: [Shipreel, by Shipreel](https://github.com/Chinteyley/shipreel/releases/download/v0.1.0/trailer-shipreel.mp4) · [livepeer/go-livepeer](https://github.com/Chinteyley/shipreel/releases/download/v0.1.0/trailer-go-livepeer.mp4)
 
 ## Why
 
